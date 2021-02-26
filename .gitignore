@@ -1,0 +1,33 @@
+# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
+.glide/
+glide.lock
+vendor/
+
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# Swagger documentation
+swagger/swagger.json
+
+### Go template
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+gobuild
+go.sum
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# IntelliJ
+/out/
+
+# env
+init-env.sh
