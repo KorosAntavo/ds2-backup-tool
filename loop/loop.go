@@ -43,31 +43,8 @@ func Loop() (<-chan error, <-chan interface{}) {
 	stopCh := make(chan interface{}, buffer)
 
 	for i, key := range functionalKeys {
-		index := i
-		hook.Register(hook.KeyDown, []string{"ctrl", key}, func(event hook.Event) {
-			log.Printf("Saving to slot %d...", index)
-
-			err := performAction(index, false)
-			if err != nil {
-				errCh <- err
-			}
-
-			time.Sleep(sleepDuration)
-		})
-	}
-
-	for i, key := range functionalKeys {
-		index := i
-		hook.Register(hook.KeyDown, []string{"shift", key}, func(event hook.Event) {
-			log.Printf("Loading from slot %d...", index)
-
-			err := performAction(index, true)
-			if err != nil {
-				errCh <- err
-			}
-
-			time.Sleep(sleepDuration)
-		})
+		hook.Register(hook.KeyDown, []string{"ctrl", key}, eventHandler(i, false, errCh))
+		hook.Register(hook.KeyDown, []string{"shift", key}, eventHandler(i, true, errCh))
 	}
 
 	//hook.Register(hook.KeyDown, stopKeys, func(event hook.Event) {
@@ -80,6 +57,27 @@ func Loop() (<-chan error, <-chan interface{}) {
 	<-hook.Process(s)
 
 	return errCh, stopCh
+}
+
+func eventHandler(index int, load bool, errCh chan<- error) func(event hook.Event) {
+	var printMsg string
+
+	if load {
+		printMsg = "Loading from slot %d..."
+	} else {
+		printMsg = "Saving to slot %d..."
+	}
+
+	return func(event hook.Event) {
+		log.Printf(printMsg, index)
+
+		err := performAction(index, load)
+		if err != nil {
+			errCh <- err
+		}
+
+		time.Sleep(sleepDuration)
+	}
 }
 
 func userHomeDir() string {
@@ -95,11 +93,11 @@ func userHomeDir() string {
 	return os.Getenv("HOME")
 }
 
-func performAction(index int, down bool) error {
+func performAction(index int, load bool) error {
 	usrDir := userHomeDir()
 
 	var from, to string
-	if down {
+	if load {
 		from = pathToBackupAt(usrDir, index)
 		to = pathToOriginal(usrDir)
 	} else {
